@@ -1,8 +1,3 @@
-__author__ = "Samppa Raittila"
-#Date: 4.12.2020
-
-#Command line interface to play Dalek in terminal
-
 import os
 from time import sleep
 
@@ -10,25 +5,19 @@ class DalekCLI:
     def __init__(self,dalekGame):
         self.__dalekGame = dalekGame
 
-    #Function starts the program and asks user to type in gamemap file
-    #Function prints error message if there was something wrong in the file
+
     def startGame(self):
         self.introduce()
 
-        while True:
-            print("Give the name of the game map file which you want to play like 'boardOne.txt':")
-            gamefile = input(">>> ")
-            succeeded, message = self.__dalekGame.setGameboardProfessorAndDaleksFromFile(gamefile)
-            if succeeded:
-                break
-            print(message)
-            print()
-
+        print("Give the name of the game map file which you want to play")
+        gamefile = input(">>> ")
+        self.__dalekGame.setGameboardProfessorAndDaleksFromFile(gamefile)
+        
         self.printGameboard()
         
         self.gameloop()
 
-    #Function prints the Dalek banner and game instructions 
+    
     def introduce(self):
         os.system('clear')
         introfile = open("intro.txt","r")
@@ -37,20 +26,17 @@ class DalekCLI:
             sleep(0.1)
         introfile.close()
         print()
-        print("Don't let the Daleks (A) get too near Doctor (D).")
+        print("Don't let Daleks get too near professor.")
         sleep(0.1)
         print("You can destroy Daleks by chrashing them together.")
         sleep(0.1)
-        print("Chrashed Daleks (#) will not harm Doctor, but they will destroy other Daleks.")
+        print("Move professor using 'w','a','s' and 'd'.")
         sleep(0.1)
-        print("Move Doctor using 'w','a','s' or 'd' + Enter key")
-        sleep(0.1)
-        print("You can use Sonic Screwdriver by command 'ss' + Enter key.")
+        print("You can use Sonic Screwdriver by command 'ss'.")
         sleep(0.1)
         print()
     
-    #Gameloop gives user possibility to give commands and steer the Doctor. 
-    #Program will break the gameloop if game ends or player presses q
+
     def gameloop(self):
         while True:
             
@@ -98,7 +84,7 @@ class DalekCLI:
                 print(char, end="")
             print()
 
-    #Function is used to print if the player won or not
+
     def gameResult(self):
         winner = self.__dalekGame.getWinner()
         if winner == 1:

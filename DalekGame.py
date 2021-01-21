@@ -1,3 +1,12 @@
+__author__ = "Samppa Raittila"
+#Date: 4.12.2020
+
+#Class contains all the logic needed to play Dalek game.
+#User interfaces can give commands to class using functions setGameboardProfessorAndDaleksFromFile(self, filename)
+#makeStepInGameToCoordinates(self, x, y) and sonicScrewdriver(self). Class provides getters that can be used to get 
+#all information about the game situation.
+
+
 from GameCharacter import GameCharacter
 import random
 
@@ -16,6 +25,7 @@ class DalekGame:
         #Function returns False if file was not found or if it wasnt
         #in the right form. Function return True if reading succeeded
         #Function returns also message describing the error
+        #Game can be started when file is read succesfully
         try:
             gameBoardFile = open(filename,"r")
 
@@ -44,7 +54,7 @@ class DalekGame:
             return False, "File not found"
 
         self.__gameboard = gameboard
-        #Program searches professor and daleks from board and initializes coordinates
+        #Program searches doctor and daleks from board and initializes coordinates
         for i in range(len(self.__gameboard)):
             for j in range(len(self.__gameboard[0])):
                 if self.__gameboard[i][j] == "D":
@@ -59,6 +69,7 @@ class DalekGame:
         
         return True, "Succeeded"
 
+    #Functions returns the two dimensional array that contains the updated gameboard
     def getGameboard(self):
         return self.__gameboard
     
@@ -67,18 +78,21 @@ class DalekGame:
     def getGameIsOngoing(self):
         return self.__gameIsOngoing
 
-
+    #This function puts the Doctor in the random position in the gameboard
+    #Function checks that Doctor doesnt land on the wall or chrashed Dalek but 
+    #Doctor can land on a Dalek
     def sonicScrewdriver(self):
-        while True:
-            x = random.randint(0,len(self.__gameboard[0])-1)
-            y = random.randint(0,len(self.__gameboard)-1)
+        if self.__gameIsOngoing:
+            while True:
+                x = random.randint(0,len(self.__gameboard[0])-1)
+                y = random.randint(0,len(self.__gameboard)-1)
+                
+                if self.__gameboard[y][x] != "*" and self.__gameboard[y][x] != "#":
+                    self.__professor.setCoordinates([y,x])
+                    break
             
-            if self.__gameboard[y][x] != "*" and self.__gameboard[y][x] != "#":
-                self.__professor.setCoordinates([y,x])
-                break
-        
-        self.updateGameboard()
-        self.checkIfGameIsOngoing()
+            self.updateGameboard()
+            self.checkIfGameIsOngoing()
           
 
     #Function moves character to desired coordinates if there is no wall
@@ -131,12 +145,16 @@ class DalekGame:
         self.__gameboard = gameboard
                 
             
-    
+    #Function moves Doctor in the gameboard according to x and y relative to the old coordinates 
+    #Walls etc. are taken into concideration
+    #For example parameters x = 1, y = 0 moves Doctor one step right
+    #It will call function to move Daleks as well
     def makeStepInGameToCoordinates(self, x, y):
-        self.moveCharacter(x, y, self.__professor)
-        self.moveDaleks()
-        self.updateGameboard()
-        self.checkIfGameIsOngoing()
+        if self.__gameIsOngoing:
+            self.moveCharacter(x, y, self.__professor)
+            self.moveDaleks()
+            self.updateGameboard()
+            self.checkIfGameIsOngoing()
 
 
     #checks if game is still going on returns 1 if player won
@@ -158,18 +176,21 @@ class DalekGame:
     def getWinner(self):
         return self.__winner
 
-
+    #Function moves Daleks on the board. If there is wall, function tries other directions
+    #as well. Only those directions are attempted that would move Dalek closer to Doctor
     def moveDaleks(self):
         for dalek in self.__daleks:
 
-            coordinates = self.calculateDirection(dalek)
+            #coordinates = self.calculateDirection(dalek)
+            coordinates = self.calculateDirectionsWithRandomBehaviour(dalek)
             i = 0
-            while i < 3:
+            while i < len(coordinates):
                 succeeded = self.moveCharacter(coordinates[i][1],coordinates[i][0], dalek)
                 if succeeded:
                     break
                 i += 1
-        
+    
+    #Function calculates coordinates where Daleks should attempt to move
     def calculateDirection(self, character):
         #Distance with sign between professor and dalek
         drow = self.__professor.getCoordinates()[0]-character.getCoordinates()[0]
@@ -209,6 +230,54 @@ class DalekGame:
             possibleCoordinates[2][0] = possibleCoordinates[0][0]
 
         return possibleCoordinates
+
+    def calculateDirectionsWithRandomBehaviour(self, character):
+        #Distance with sign between professor and dalek
+        drow = self.__professor.getCoordinates()[0]-character.getCoordinates()[0]
+        dcolumn = self.__professor.getCoordinates()[1]-character.getCoordinates()[1]
+        coordinates = [[0,0]]
+
+        absdrow = abs(drow)
+        absdcolumn = abs(dcolumn)
+
+        #If direction is obvious, directions are calculeted without random behaviour
+        #using calculateDirection function
+        if absdrow == absdcolumn or absdrow == 0 or absdcolumn == 0:
+            return self.calculateDirection(character)
+
+        #r is used to measure the slope of the movement
+        r = 0.5
+        if absdrow > absdcolumn:
+            r = absdcolumn/absdrow
+        else:
+            r = absdrow/absdcolumn
+        
+        randomCoeffifent = random.random()
+
+        #If random number is greater than r, nearest direction is calculated
+        #If not, direction is calculated parallel to coordinate axis depending
+        #on which coordinate is greater
+        if randomCoeffifent > r:
+            return self.calculateDirection(character)
+        else:
+            #Direction parallel to coordinate axis is chosen depending on
+            #which direction takes Dalek closer to Doctor
+            if absdrow > absdcolumn:
+                if drow > 0:
+                    coordinates[0][0] = -1
+                elif drow < 0:
+                    coordinates[0][0] = 1
+            if absdcolumn > absdrow:
+                if dcolumn > 0:
+                    coordinates[0][1] = 1
+                elif dcolumn < 0:
+                    coordinates[0][1] = -1
+
+        #Coordinates without random are also calculated because there could be wall in the first direction    
+        extraCoordinates = self.calculateDirection(character)
+        coordinates.extend(extraCoordinates)
+
+        return coordinates
 
 
 

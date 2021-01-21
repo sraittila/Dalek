@@ -1,3 +1,10 @@
+__author__ = "Samppa Raittila"
+#Date: 4.12.2020
+
+#Main class for the Dalek game
+#Provides possibility to choose graphical or command line interface
+#Parameter "cli" chooses CLI otherwise GUI is used
+
 from DalekGame import DalekGame 
 from DalekCLI import DalekCLI
 from DalekGUI import DalekGUI
